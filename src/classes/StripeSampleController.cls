@@ -39,13 +39,13 @@ public class StripeSampleController {
         StripeSampleController.createCustomerAndCharge(this.acc.Id, this.cont.id, this.parameters.get('stripeToken'));        
     }
 
-    @future
+    @future (callout=true)
     private static void createCustomerAndCharge(string acc, String cont, String token) {
 
         Account a = new Account();
         Contact c = new Contact();
-        StripeCustomer = new StripeCustomer();
-        StripeCharge = new StripeCharge();
+        StripeCustomer customer = new StripeCustomer();
+        StripeCharge charge = new StripeCharge();
 
         Map<String, String> properties = new Map<String, String>();
         Map<String, String> metadata = new Map<String, String>();
@@ -55,7 +55,7 @@ public class StripeSampleController {
             c = [SELECT id, Email FROM Contact WHERE Id = : cont LIMIT 1];
 
             properties.put('source', token);
-            properties.put('email', cont.Email);
+            properties.put('email', c.Email);
             properties.put('description','Sample Payment Form');
         
             metadata.put('SFDCAccount', a.Id);
@@ -74,7 +74,7 @@ public class StripeSampleController {
         }         
         
         catch (DmlException d) {
-            System.debug('DML Exception ' + e.getMessage());
+            System.debug('DML Exception ' + d.getMessage());
         }
 
         catch (StripeException e) {
