@@ -1,0 +1,85 @@
+<apex:page id="pay" 
+           showheader="false" 
+           doctype="html-5.0" 
+           sidebar="false" 
+           controller="StripeSampleController"
+           standardStylesheets="false"
+           apiVersion="35.0"
+       >
+    <apex:includeScript value="https://js.stripe.com/v2/"/>
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"/>
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS110, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    <script type="text/javascript">
+    // This identifies your website in the createToken call below
+    Stripe.setPublishableKey('{!StripePk}');
+    var stripeResponseHandler = function(status, response) {
+      var $form = $('form');
+      if (response.error) {
+        // Show the errors on the form
+        $form.find('.payment-errors').text(response.error.message);
+        $form.find('dopay').prop('disabled', false);
+      } else {
+        // token contains id, last4, and card type
+        var token = response.id;
+        // Insert the token into the form so it gets submitted to the server
+        $form.append($('<input type="hidden" name="stripeToken" />').val(token));
+          //$form.get(0).submit();
+          //$form.find('dopay').prop('disabled', false);
+          makepayment();
+      }
+    };
+    jQuery(function($) {
+      $('form').submit(function(e) {
+        var $form = $(this);
+        // Disable the submit button to prevent repeated clicks
+        $form.find('dopay').prop('disabled', true);
+        Stripe.card.createToken($form, stripeResponseHandler);
+        // Prevent the form from submitting with the default action
+        return false;
+      });
+    });
+  </script>
+    <div class="slds">
+    <apex:pageBlock id="bl" rendered="{!isStep1}">
+        <apex:pageBlockSection id="s1" collapsible="false">
+            <apex:form id="pf">
+                <apex:actionFunction name="makepayment" action="{!save}"/>
+                <span class="payment-errors"></span>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Name</apex:outputLabel>
+                    <apex:inputText value="{!Acc.Name}" id="name" title="name" html-data-stripe="name" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Email</apex:outputLabel>
+                    <apex:inputText value="{!Cont.Email}" id="email" title="email" html-data-stripe="email" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Card Number</apex:outputLabel>
+                    <apex:inputText id="number" title="cardnumber" html-data-stripe="number" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Verification Code</apex:outputLabel>
+                    <apex:inputText id="cvc" title="cvc" html-data-stripe="cvc" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Expiry Month</apex:outputLabel>
+                    <apex:inputText id="expm" title="expm" html-data-stripe="exp-month" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel styleClass="slds-form-element__label">Expiry Year</apex:outputLabel>
+                    <apex:inputText id="expy" title="expy" html-data-stripe="exp-year" styleclass="slds-input"/>
+                </apex:pageBlockSectionItem>
+                <apex:commandButton id="dopay" value="Make payment" title="Make payment" action="{!save}" styleClass="slds-button slds-button--brand" />
+                
+            </apex:form>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <apex:pageBlock id="b2" rendered="{!isStep2}">
+        <apex:pageBlockSection id="s2" collapsible="false">
+                <apex:outputText >Thank you!</apex:outputText>
+                {!token}
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    
+    </div>
+</apex:page>
